@@ -77,8 +77,6 @@ struct Stock {
     day_30_ranking: f64,
     day_120_ranking: f64,
     day_250_ranking: f64,
-
-    display_texts: HashMap<&'static str, SharedString>,
 }
 
 impl Stock {
@@ -99,164 +97,106 @@ impl Stock {
         self.volume_ratio = self.volume / self.turnover;
         self.high = self.price * (1.0 + (0.0..1.5).fake::<f64>());
         self.low = self.price * (1.0 + (-1.5..0.0).fake::<f64>());
-        self.prepare();
     }
 
-    fn get_text(&self, key: &str) -> SharedString {
-        self.display_texts.get(key).cloned().unwrap_or("--".into())
-    }
-
-    /// Prepare the stock for display.
-    fn prepare(&mut self) {
-        self.display_texts = HashMap::from([
-            ("id", self.id.to_string().into()),
-            ("name", self.name.clone()),
-            ("symbol", self.symbol.clone()),
-            ("price", format!("{:.3}", self.price).into()),
-            ("change", format!("{:.3}", self.change).into()),
-            (
-                "change_percent",
-                format!("{:.3}", self.change_percent).into(),
-            ),
-            ("volume", format!("{:.3}", self.volume).into()),
-            ("turnover", format!("{:.3}", self.turnover).into()),
-            ("market_cap", format!("{:.3}", self.market_cap).into()),
-            ("ttm", format!("{:.3}", self.ttm).into()),
-            (
-                "five_mins_ranking",
-                format!("{:.3}", self.five_mins_ranking).into(),
-            ),
-            (
-                "th60_days_ranking",
-                format!("{:.3}", self.th60_days_ranking).into(),
-            ),
-            (
-                "year_change_percent",
-                format!("{:.3}", self.year_change_percent).into(),
-            ),
-            ("bid", format!("{:.3}", self.bid).into()),
-            ("bid_volume", format!("{:.3}", self.bid_volume).into()),
-            ("ask", format!("{:.3}", self.ask).into()),
-            ("ask_volume", format!("{:.3}", self.ask_volume).into()),
-            ("open", format!("{:.3}", self.open).into()),
-            ("prev_close", format!("{:.3}", self.prev_close).into()),
-            ("high", format!("{:.3}", self.high).into()),
-            ("low", format!("{:.3}", self.low).into()),
-            ("turnover_rate", format!("{:.3}", self.turnover_rate).into()),
-            ("rise_rate", format!("{:.3}", self.rise_rate).into()),
-            ("amplitude", format!("{:.3}", self.amplitude).into()),
-            ("pe_status", format!("{:.3}", self.pe_status).into()),
-            ("pb_status", format!("{:.3}", self.pb_status).into()),
-            ("volume_ratio", format!("{:.3}", self.volume_ratio).into()),
-            ("bid_ask_ratio", format!("{:.3}", self.bid_ask_ratio).into()),
-            (
-                "latest_pre_close",
-                format!("{:.3}", self.latest_pre_close).into(),
-            ),
-            (
-                "latest_post_close",
-                format!("{:.3}", self.latest_post_close).into(),
-            ),
-            (
-                "pre_market_cap",
-                format!("{:.3}", self.pre_market_cap).into(),
-            ),
-            (
-                "pre_market_percent",
-                format!("{:.3}", self.pre_market_percent * 100.0).into(),
-            ),
-            (
-                "pre_market_change",
-                format!("{:.3}", self.pre_market_change).into(),
-            ),
-            (
-                "post_market_cap",
-                format!("{:.3}", self.post_market_cap).into(),
-            ),
-            (
-                "post_market_percent",
-                format!("{:.3}", self.post_market_percent * 100.0).into(),
-            ),
-            (
-                "post_market_change",
-                format!("{:.3}", self.post_market_change).into(),
-            ),
-            ("float_cap", format!("{:.3}", self.float_cap).into()),
-            ("shares", format!("{:.3}", self.shares).into()),
-            ("shares_float", format!("{:.3}", self.shares_float).into()),
-            ("day_5_ranking", format!("{:.3}", self.day_5_ranking).into()),
-            (
-                "day_10_ranking",
-                format!("{:.3}", self.day_10_ranking).into(),
-            ),
-            (
-                "day_30_ranking",
-                format!("{:.3}", self.day_30_ranking).into(),
-            ),
-            (
-                "day_120_ranking",
-                format!("{:.3}", self.day_120_ranking).into(),
-            ),
-            (
-                "day_250_ranking",
-                format!("{:.3}", self.day_250_ranking).into(),
-            ),
-        ]);
+    fn display_text(&self, key: &str) -> SharedString {
+        match key {
+            "id" => self.id.to_string().into(),
+            "name" => self.name.clone(),
+            "symbol" => self.symbol.clone(),
+            "price" => format!("{:.3}", self.price).into(),
+            "change" => format!("{:.3}", self.change).into(),
+            "change_percent" => format!("{:.3}", self.change_percent).into(),
+            "volume" => format!("{:.3}", self.volume).into(),
+            "turnover" => format!("{:.3}", self.turnover).into(),
+            "market_cap" => format!("{:.3}", self.market_cap).into(),
+            "ttm" => format!("{:.3}", self.ttm).into(),
+            "five_mins_ranking" => format!("{:.3}", self.five_mins_ranking).into(),
+            "th60_days_ranking" => format!("{:.3}", self.th60_days_ranking).into(),
+            "year_change_percent" => format!("{:.3}", self.year_change_percent).into(),
+            "bid" => format!("{:.3}", self.bid).into(),
+            "bid_volume" => format!("{:.3}", self.bid_volume).into(),
+            "ask" => format!("{:.3}", self.ask).into(),
+            "ask_volume" => format!("{:.3}", self.ask_volume).into(),
+            "open" => format!("{:.3}", self.open).into(),
+            "prev_close" => format!("{:.3}", self.prev_close).into(),
+            "high" => format!("{:.3}", self.high).into(),
+            "low" => format!("{:.3}", self.low).into(),
+            "turnover_rate" => format!("{:.3}", self.turnover_rate).into(),
+            "rise_rate" => format!("{:.3}", self.rise_rate).into(),
+            "amplitude" => format!("{:.3}", self.amplitude).into(),
+            "pe_status" => format!("{:.3}", self.pe_status).into(),
+            "pb_status" => format!("{:.3}", self.pb_status).into(),
+            "volume_ratio" => format!("{:.3}", self.volume_ratio).into(),
+            "bid_ask_ratio" => format!("{:.3}", self.bid_ask_ratio).into(),
+            "latest_pre_close" => format!("{:.3}", self.latest_pre_close).into(),
+            "latest_post_close" => format!("{:.3}", self.latest_post_close).into(),
+            "pre_market_cap" => format!("{:.3}", self.pre_market_cap).into(),
+            "pre_market_percent" => format!("{:.3}", self.pre_market_percent * 100.0).into(),
+            "pre_market_change" => format!("{:.3}", self.pre_market_change).into(),
+            "post_market_cap" => format!("{:.3}", self.post_market_cap).into(),
+            "post_market_percent" => format!("{:.3}", self.post_market_percent * 100.0).into(),
+            "post_market_change" => format!("{:.3}", self.post_market_change).into(),
+            "float_cap" => format!("{:.3}", self.float_cap).into(),
+            "shares" => format!("{:.3}", self.shares).into(),
+            "shares_float" => format!("{:.3}", self.shares_float).into(),
+            "day_5_ranking" => format!("{:.3}", self.day_5_ranking).into(),
+            "day_10_ranking" => format!("{:.3}", self.day_10_ranking).into(),
+            "day_30_ranking" => format!("{:.3}", self.day_30_ranking).into(),
+            "day_120_ranking" => format!("{:.3}", self.day_120_ranking).into(),
+            "day_250_ranking" => format!("{:.3}", self.day_250_ranking).into(),
+            _ => "--".into(),
+        }
     }
 }
 
 fn random_stocks(size: usize) -> Vec<Stock> {
     (0..size)
-        .map(|id| {
-            let mut stock = Stock {
-                id,
-                symbol: Faker.fake::<String>().into(),
-                name: Faker.fake::<String>().into(),
-                change: (-100.0..100.0).fake(),
-                change_percent: (-1.0..1.0).fake(),
-                volume: (0.0..1000.0).fake(),
-                turnover: (0.0..1000.0).fake(),
-                market_cap: (0.0..1000.0).fake(),
-                ttm: (0.0..1000.0).fake(),
-                five_mins_ranking: (0.0..1000.0).fake(),
-                th60_days_ranking: (0.0..1000.0).fake(),
-                year_change_percent: (-1.0..1.0).fake(),
-                bid: (0.0..1000.0).fake(),
-                bid_volume: (0.0..1000.0).fake(),
-                ask: (0.0..1000.0).fake(),
-                ask_volume: (0.0..1000.0).fake(),
-                open: (0.0..1000.0).fake(),
-                prev_close: (0.0..1000.0).fake(),
-                high: (0.0..1000.0).fake(),
-                low: (0.0..1000.0).fake(),
-                turnover_rate: (0.0..1.0).fake(),
-                rise_rate: (0.0..1.0).fake(),
-                amplitude: (0.0..1000.0).fake(),
-                pe_status: (0.0..1000.0).fake(),
-                pb_status: (0.0..1000.0).fake(),
-                volume_ratio: (0.0..1.0).fake(),
-                bid_ask_ratio: (0.0..1.0).fake(),
-                latest_pre_close: (0.0..1000.0).fake(),
-                latest_post_close: (0.0..1000.0).fake(),
-                pre_market_cap: (0.0..1000.0).fake(),
-                pre_market_percent: (-1.0..1.0).fake(),
-                pre_market_change: (-100.0..100.0).fake(),
-                post_market_cap: (0.0..1000.0).fake(),
-                post_market_percent: (-1.0..1.0).fake(),
-                post_market_change: (-100.0..100.0).fake(),
-                float_cap: (0.0..1000.0).fake(),
-                shares: (100000..9999999).fake(),
-                shares_float: (100000..9999999).fake(),
-                day_5_ranking: (0.0..1000.0).fake(),
-                day_10_ranking: (0.0..1000.0).fake(),
-                day_30_ranking: (0.0..1000.0).fake(),
-                day_120_ranking: (0.0..1000.0).fake(),
-                day_250_ranking: (0.0..1000.0).fake(),
-                ..Default::default()
-            };
-
-            stock.prepare();
-            stock
+        .map(|id| Stock {
+            id,
+            symbol: Faker.fake::<String>().into(),
+            name: Faker.fake::<String>().into(),
+            change: (-100.0..100.0).fake(),
+            change_percent: (-1.0..1.0).fake(),
+            volume: (0.0..1000.0).fake(),
+            turnover: (0.0..1000.0).fake(),
+            market_cap: (0.0..1000.0).fake(),
+            ttm: (0.0..1000.0).fake(),
+            five_mins_ranking: (0.0..1000.0).fake(),
+            th60_days_ranking: (0.0..1000.0).fake(),
+            year_change_percent: (-1.0..1.0).fake(),
+            bid: (0.0..1000.0).fake(),
+            bid_volume: (0.0..1000.0).fake(),
+            ask: (0.0..1000.0).fake(),
+            ask_volume: (0.0..1000.0).fake(),
+            open: (0.0..1000.0).fake(),
+            prev_close: (0.0..1000.0).fake(),
+            high: (0.0..1000.0).fake(),
+            low: (0.0..1000.0).fake(),
+            turnover_rate: (0.0..1.0).fake(),
+            rise_rate: (0.0..1.0).fake(),
+            amplitude: (0.0..1000.0).fake(),
+            pe_status: (0.0..1000.0).fake(),
+            pb_status: (0.0..1000.0).fake(),
+            volume_ratio: (0.0..1.0).fake(),
+            bid_ask_ratio: (0.0..1.0).fake(),
+            latest_pre_close: (0.0..1000.0).fake(),
+            latest_post_close: (0.0..1000.0).fake(),
+            pre_market_cap: (0.0..1000.0).fake(),
+            pre_market_percent: (-1.0..1.0).fake(),
+            pre_market_change: (-100.0..100.0).fake(),
+            post_market_cap: (0.0..1000.0).fake(),
+            post_market_percent: (-1.0..1.0).fake(),
+            post_market_change: (-100.0..100.0).fake(),
+            float_cap: (0.0..1000.0).fake(),
+            shares: (100000..9999999).fake(),
+            shares_float: (100000..9999999).fake(),
+            day_5_ranking: (0.0..1000.0).fake(),
+            day_10_ranking: (0.0..1000.0).fake(),
+            day_30_ranking: (0.0..1000.0).fake(),
+            day_120_ranking: (0.0..1000.0).fake(),
+            day_250_ranking: (0.0..1000.0).fake(),
+            ..Default::default()
         })
         .collect()
 }
@@ -506,7 +446,7 @@ impl TableDelegate for StockTableDelegate {
         let stock = self.stocks.get(row_ix).unwrap();
         let col = self.columns.get(col_ix).unwrap();
 
-        let text = stock.get_text(col.id.as_ref());
+        let text = stock.display_text(&col.id);
 
         match col.id.as_ref() {
             "price" => self.render_value_cell(stock.price, text, cx),
