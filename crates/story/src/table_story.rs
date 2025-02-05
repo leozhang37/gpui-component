@@ -207,51 +207,56 @@ impl Stock {
 
 fn random_stocks(size: usize) -> Vec<Stock> {
     (0..size)
-        .map(|id| Stock {
-            id,
-            symbol: Faker.fake::<String>().into(),
-            name: Faker.fake::<String>().into(),
-            change: (-100.0..100.0).fake(),
-            change_percent: (-1.0..1.0).fake(),
-            volume: (0.0..1000.0).fake(),
-            turnover: (0.0..1000.0).fake(),
-            market_cap: (0.0..1000.0).fake(),
-            ttm: (0.0..1000.0).fake(),
-            five_mins_ranking: (0.0..1000.0).fake(),
-            th60_days_ranking: (0.0..1000.0).fake(),
-            year_change_percent: (-1.0..1.0).fake(),
-            bid: (0.0..1000.0).fake(),
-            bid_volume: (0.0..1000.0).fake(),
-            ask: (0.0..1000.0).fake(),
-            ask_volume: (0.0..1000.0).fake(),
-            open: (0.0..1000.0).fake(),
-            prev_close: (0.0..1000.0).fake(),
-            high: (0.0..1000.0).fake(),
-            low: (0.0..1000.0).fake(),
-            turnover_rate: (0.0..1.0).fake(),
-            rise_rate: (0.0..1.0).fake(),
-            amplitude: (0.0..1000.0).fake(),
-            pe_status: (0.0..1000.0).fake(),
-            pb_status: (0.0..1000.0).fake(),
-            volume_ratio: (0.0..1.0).fake(),
-            bid_ask_ratio: (0.0..1.0).fake(),
-            latest_pre_close: (0.0..1000.0).fake(),
-            latest_post_close: (0.0..1000.0).fake(),
-            pre_market_cap: (0.0..1000.0).fake(),
-            pre_market_percent: (-1.0..1.0).fake(),
-            pre_market_change: (-100.0..100.0).fake(),
-            post_market_cap: (0.0..1000.0).fake(),
-            post_market_percent: (-1.0..1.0).fake(),
-            post_market_change: (-100.0..100.0).fake(),
-            float_cap: (0.0..1000.0).fake(),
-            shares: (100000..9999999).fake(),
-            shares_float: (100000..9999999).fake(),
-            day_5_ranking: (0.0..1000.0).fake(),
-            day_10_ranking: (0.0..1000.0).fake(),
-            day_30_ranking: (0.0..1000.0).fake(),
-            day_120_ranking: (0.0..1000.0).fake(),
-            day_250_ranking: (0.0..1000.0).fake(),
-            ..Default::default()
+        .map(|id| {
+            let mut stock = Stock {
+                id,
+                symbol: Faker.fake::<String>().into(),
+                name: Faker.fake::<String>().into(),
+                change: (-100.0..100.0).fake(),
+                change_percent: (-1.0..1.0).fake(),
+                volume: (0.0..1000.0).fake(),
+                turnover: (0.0..1000.0).fake(),
+                market_cap: (0.0..1000.0).fake(),
+                ttm: (0.0..1000.0).fake(),
+                five_mins_ranking: (0.0..1000.0).fake(),
+                th60_days_ranking: (0.0..1000.0).fake(),
+                year_change_percent: (-1.0..1.0).fake(),
+                bid: (0.0..1000.0).fake(),
+                bid_volume: (0.0..1000.0).fake(),
+                ask: (0.0..1000.0).fake(),
+                ask_volume: (0.0..1000.0).fake(),
+                open: (0.0..1000.0).fake(),
+                prev_close: (0.0..1000.0).fake(),
+                high: (0.0..1000.0).fake(),
+                low: (0.0..1000.0).fake(),
+                turnover_rate: (0.0..1.0).fake(),
+                rise_rate: (0.0..1.0).fake(),
+                amplitude: (0.0..1000.0).fake(),
+                pe_status: (0.0..1000.0).fake(),
+                pb_status: (0.0..1000.0).fake(),
+                volume_ratio: (0.0..1.0).fake(),
+                bid_ask_ratio: (0.0..1.0).fake(),
+                latest_pre_close: (0.0..1000.0).fake(),
+                latest_post_close: (0.0..1000.0).fake(),
+                pre_market_cap: (0.0..1000.0).fake(),
+                pre_market_percent: (-1.0..1.0).fake(),
+                pre_market_change: (-100.0..100.0).fake(),
+                post_market_cap: (0.0..1000.0).fake(),
+                post_market_percent: (-1.0..1.0).fake(),
+                post_market_change: (-100.0..100.0).fake(),
+                float_cap: (0.0..1000.0).fake(),
+                shares: (100000..9999999).fake(),
+                shares_float: (100000..9999999).fake(),
+                day_5_ranking: (0.0..1000.0).fake(),
+                day_10_ranking: (0.0..1000.0).fake(),
+                day_30_ranking: (0.0..1000.0).fake(),
+                day_120_ranking: (0.0..1000.0).fake(),
+                day_250_ranking: (0.0..1000.0).fake(),
+                ..Default::default()
+            };
+
+            stock.prepare();
+            stock
         })
         .collect()
 }
@@ -360,7 +365,6 @@ impl StockTableDelegate {
 
     fn update_stocks(&mut self, size: usize) {
         self.stocks = random_stocks(size);
-        self.stocks.iter_mut().for_each(|stock| stock.prepare());
         self.is_eof = size <= 50;
         self.loading = false;
         self.full_loading = false;

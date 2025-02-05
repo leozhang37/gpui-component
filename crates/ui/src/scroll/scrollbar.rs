@@ -706,17 +706,18 @@ impl Element for Scrollbar {
                 let view_id = self.view_id;
 
                 move |event: &MouseMoveEvent, _, _, cx| {
+                    let mut notify = false;
                     // Update hovered state for scrollbar
                     if bounds.contains(&event.position) {
                         if state.get().hovered_axis != Some(axis) {
                             state.set(state.get().with_hovered(Some(axis)));
-                            cx.notify(view_id);
+                            notify = true;
                         }
                     } else {
                         if state.get().hovered_axis == Some(axis) {
                             if state.get().hovered_axis.is_some() {
                                 state.set(state.get().with_hovered(None));
-                                cx.notify(view_id);
+                                notify = true;
                             }
                         }
                     }
@@ -725,12 +726,12 @@ impl Element for Scrollbar {
                     if thumb_bounds.contains(&event.position) {
                         if state.get().hovered_on_thumb != Some(axis) {
                             state.set(state.get().with_hovered_on_thumb(Some(axis)));
-                            cx.notify(view_id);
+                            notify = true;
                         }
                     } else {
                         if state.get().hovered_on_thumb == Some(axis) {
                             state.set(state.get().with_hovered_on_thumb(None));
-                            cx.notify(view_id);
+                            notify = true;
                         }
                     }
 
@@ -767,8 +768,12 @@ impl Element for Scrollbar {
                             || (scroll_handle.offset().x - offset.x).abs() > px(1.)
                         {
                             scroll_handle.set_offset(offset);
-                            cx.notify(view_id);
+                            notify = true;
                         }
+                    }
+
+                    if notify {
+                        cx.notify(view_id);
                     }
                 }
             });
