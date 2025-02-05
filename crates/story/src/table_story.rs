@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     ops::Range,
     time::{self, Duration},
 };
@@ -76,6 +77,8 @@ struct Stock {
     day_30_ranking: f64,
     day_120_ranking: f64,
     day_250_ranking: f64,
+
+    display_texts: HashMap<&'static str, SharedString>,
 }
 
 impl Stock {
@@ -96,6 +99,109 @@ impl Stock {
         self.volume_ratio = self.volume / self.turnover;
         self.high = self.price * (1.0 + (0.0..1.5).fake::<f64>());
         self.low = self.price * (1.0 + (-1.5..0.0).fake::<f64>());
+        self.prepare();
+    }
+
+    fn get_text(&self, key: &str) -> SharedString {
+        self.display_texts.get(key).cloned().unwrap_or("--".into())
+    }
+
+    /// Prepare the stock for display.
+    fn prepare(&mut self) {
+        self.display_texts = HashMap::from([
+            ("id", self.id.to_string().into()),
+            ("name", self.name.clone()),
+            ("symbol", self.symbol.clone()),
+            ("price", format!("{:.3}", self.price).into()),
+            ("change", format!("{:.3}", self.change).into()),
+            (
+                "change_percent",
+                format!("{:.3}", self.change_percent).into(),
+            ),
+            ("volume", format!("{:.3}", self.volume).into()),
+            ("turnover", format!("{:.3}", self.turnover).into()),
+            ("market_cap", format!("{:.3}", self.market_cap).into()),
+            ("ttm", format!("{:.3}", self.ttm).into()),
+            (
+                "five_mins_ranking",
+                format!("{:.3}", self.five_mins_ranking).into(),
+            ),
+            (
+                "th60_days_ranking",
+                format!("{:.3}", self.th60_days_ranking).into(),
+            ),
+            (
+                "year_change_percent",
+                format!("{:.3}", self.year_change_percent).into(),
+            ),
+            ("bid", format!("{:.3}", self.bid).into()),
+            ("bid_volume", format!("{:.3}", self.bid_volume).into()),
+            ("ask", format!("{:.3}", self.ask).into()),
+            ("ask_volume", format!("{:.3}", self.ask_volume).into()),
+            ("open", format!("{:.3}", self.open).into()),
+            ("prev_close", format!("{:.3}", self.prev_close).into()),
+            ("high", format!("{:.3}", self.high).into()),
+            ("low", format!("{:.3}", self.low).into()),
+            ("turnover_rate", format!("{:.3}", self.turnover_rate).into()),
+            ("rise_rate", format!("{:.3}", self.rise_rate).into()),
+            ("amplitude", format!("{:.3}", self.amplitude).into()),
+            ("pe_status", format!("{:.3}", self.pe_status).into()),
+            ("pb_status", format!("{:.3}", self.pb_status).into()),
+            ("volume_ratio", format!("{:.3}", self.volume_ratio).into()),
+            ("bid_ask_ratio", format!("{:.3}", self.bid_ask_ratio).into()),
+            (
+                "latest_pre_close",
+                format!("{:.3}", self.latest_pre_close).into(),
+            ),
+            (
+                "latest_post_close",
+                format!("{:.3}", self.latest_post_close).into(),
+            ),
+            (
+                "pre_market_cap",
+                format!("{:.3}", self.pre_market_cap).into(),
+            ),
+            (
+                "pre_market_percent",
+                format!("{:.3}", self.pre_market_percent * 100.0).into(),
+            ),
+            (
+                "pre_market_change",
+                format!("{:.3}", self.pre_market_change).into(),
+            ),
+            (
+                "post_market_cap",
+                format!("{:.3}", self.post_market_cap).into(),
+            ),
+            (
+                "post_market_percent",
+                format!("{:.3}", self.post_market_percent * 100.0).into(),
+            ),
+            (
+                "post_market_change",
+                format!("{:.3}", self.post_market_change).into(),
+            ),
+            ("float_cap", format!("{:.3}", self.float_cap).into()),
+            ("shares", format!("{:.3}", self.shares).into()),
+            ("shares_float", format!("{:.3}", self.shares_float).into()),
+            ("day_5_ranking", format!("{:.3}", self.day_5_ranking).into()),
+            (
+                "day_10_ranking",
+                format!("{:.3}", self.day_10_ranking).into(),
+            ),
+            (
+                "day_30_ranking",
+                format!("{:.3}", self.day_30_ranking).into(),
+            ),
+            (
+                "day_120_ranking",
+                format!("{:.3}", self.day_120_ranking).into(),
+            ),
+            (
+                "day_250_ranking",
+                format!("{:.3}", self.day_250_ranking).into(),
+            ),
+        ]);
     }
 }
 
@@ -188,10 +294,10 @@ struct StockTableDelegate {
 }
 
 impl StockTableDelegate {
-    fn new(size: usize) -> Self {
+    fn new() -> Self {
         Self {
             size: Size::default(),
-            stocks: random_stocks(size),
+            stocks: vec![],
             columns: vec![
                 Column::new("id", "ID", None),
                 Column::new("symbol", "Symbol", Some(ColSort::Default)),
@@ -254,36 +360,39 @@ impl StockTableDelegate {
 
     fn update_stocks(&mut self, size: usize) {
         self.stocks = random_stocks(size);
+        self.stocks.iter_mut().for_each(|stock| stock.prepare());
         self.is_eof = size <= 50;
         self.loading = false;
         self.full_loading = false;
     }
 
-    fn render_value_cell(&self, val: f64, cx: &mut Context<Table<Self>>) -> AnyElement {
+    fn render_value_cell(
+        &self,
+        val: f64,
+        value_text: SharedString,
+        cx: &mut Context<Table<Self>>,
+    ) -> AnyElement {
         let (fg_scale, bg_scale, opacity) = match cx.theme().mode.is_dark() {
             true => (200, 950, 0.3),
             false => (600, 50, 0.6),
         };
 
-        let this = div()
-            .h_full()
-            .table_cell_size(self.size)
-            .child(format!("{:.3}", val));
+        let el = div().h_full().table_cell_size(self.size).child(value_text);
         // Val is a 0.0 .. n.0
         // 30% to red, 30% to green, others to default
         let right_num = ((val - val.floor()) * 1000.).floor() as i32;
 
-        let this = if right_num % 3 == 0 {
-            this.text_color(ui::red(fg_scale))
+        let el = if right_num % 3 == 0 {
+            el.text_color(ui::red(fg_scale))
                 .bg(ui::red(bg_scale).opacity(opacity))
         } else if right_num % 3 == 1 {
-            this.text_color(ui::green(fg_scale))
+            el.text_color(ui::green(fg_scale))
                 .bg(ui::green(bg_scale).opacity(opacity))
         } else {
-            this
+            el
         };
 
-        this.into_any_element()
+        el.into_any_element()
     }
 }
 
@@ -393,58 +502,26 @@ impl TableDelegate for StockTableDelegate {
         let stock = self.stocks.get(row_ix).unwrap();
         let col = self.columns.get(col_ix).unwrap();
 
+        let text = stock.get_text(col.id.as_ref());
+
         match col.id.as_ref() {
-            "id" => stock.id.to_string().into_any_element(),
-            "name" => stock.name.clone().into_any_element(),
-            "symbol" => stock.symbol.clone().into_any_element(),
-            "price" => self.render_value_cell(stock.price, cx),
-            "change" => self.render_value_cell(stock.change, cx),
-            "change_percent" => self.render_value_cell(stock.change_percent, cx),
-            "volume" => self.render_value_cell(stock.volume, cx),
-            "turnover" => self.render_value_cell(stock.turnover, cx),
-            "market_cap" => self.render_value_cell(stock.market_cap, cx),
-            "ttm" => self.render_value_cell(stock.ttm, cx),
-            "five_mins_ranking" => self.render_value_cell(stock.five_mins_ranking, cx),
-            "th60_days_ranking" => stock.th60_days_ranking.to_string().into_any_element(),
-            "year_change_percent" => (stock.year_change_percent * 100.0)
-                .to_string()
-                .into_any_element(),
-            "bid" => self.render_value_cell(stock.bid, cx),
-            "bid_volume" => self.render_value_cell(stock.bid_volume, cx),
-            "ask" => self.render_value_cell(stock.ask, cx),
-            "ask_volume" => self.render_value_cell(stock.ask_volume, cx),
-            "open" => stock.open.to_string().into_any_element(),
-            "prev_close" => stock.prev_close.to_string().into_any_element(),
-            "high" => self.render_value_cell(stock.high, cx),
-            "low" => self.render_value_cell(stock.low, cx),
-            "turnover_rate" => (stock.turnover_rate * 100.0).to_string().into_any_element(),
-            "rise_rate" => (stock.rise_rate * 100.0).to_string().into_any_element(),
-            "amplitude" => (stock.amplitude * 100.0).to_string().into_any_element(),
-            "pe_status" => stock.pe_status.to_string().into_any_element(),
-            "pb_status" => stock.pb_status.to_string().into_any_element(),
-            "volume_ratio" => self.render_value_cell(stock.volume_ratio, cx),
-            "bid_ask_ratio" => self.render_value_cell(stock.bid_ask_ratio, cx),
-            "latest_pre_close" => stock.latest_pre_close.to_string().into_any_element(),
-            "latest_post_close" => stock.latest_post_close.to_string().into_any_element(),
-            "pre_market_cap" => stock.pre_market_cap.to_string().into_any_element(),
-            "pre_market_percent" => (stock.pre_market_percent * 100.0)
-                .to_string()
-                .into_any_element(),
-            "pre_market_change" => stock.pre_market_change.to_string().into_any_element(),
-            "post_market_cap" => stock.post_market_cap.to_string().into_any_element(),
-            "post_market_percent" => (stock.post_market_percent * 100.0)
-                .to_string()
-                .into_any_element(),
-            "post_market_change" => stock.post_market_change.to_string().into_any_element(),
-            "float_cap" => stock.float_cap.to_string().into_any_element(),
-            "shares" => stock.shares.to_string().into_any_element(),
-            "shares_float" => stock.shares_float.to_string().into_any_element(),
-            "day_5_ranking" => stock.day_5_ranking.to_string().into_any_element(),
-            "day_10_ranking" => stock.day_10_ranking.to_string().into_any_element(),
-            "day_30_ranking" => stock.day_30_ranking.to_string().into_any_element(),
-            "day_120_ranking" => stock.day_120_ranking.to_string().into_any_element(),
-            "day_250_ranking" => stock.day_250_ranking.to_string().into_any_element(),
-            _ => "--".to_string().into_any_element(),
+            "price" => self.render_value_cell(stock.price, text, cx),
+            "change" => self.render_value_cell(stock.change, text, cx),
+            "change_percent" => self.render_value_cell(stock.change_percent, text, cx),
+            "volume" => self.render_value_cell(stock.volume, text, cx),
+            "turnover" => self.render_value_cell(stock.turnover, text, cx),
+            "market_cap" => self.render_value_cell(stock.market_cap, text, cx),
+            "ttm" => self.render_value_cell(stock.ttm, text, cx),
+            "five_mins_ranking" => self.render_value_cell(stock.five_mins_ranking, text, cx),
+            "bid" => self.render_value_cell(stock.bid, text, cx),
+            "bid_volume" => self.render_value_cell(stock.bid_volume, text, cx),
+            "ask" => self.render_value_cell(stock.ask, text, cx),
+            "ask_volume" => self.render_value_cell(stock.ask_volume, text, cx),
+            "high" => self.render_value_cell(stock.high, text, cx),
+            "low" => self.render_value_cell(stock.low, text, cx),
+            "volume_ratio" => self.render_value_cell(stock.volume_ratio, text, cx),
+            "bid_ask_ratio" => self.render_value_cell(stock.bid_ask_ratio, text, cx),
+            _ => text.into_any_element(),
         }
     }
 
@@ -604,7 +681,8 @@ impl TableStory {
             input
         });
 
-        let delegate = StockTableDelegate::new(5000);
+        let mut delegate = StockTableDelegate::new();
+        delegate.update_stocks(50000);
         let table = cx.new(|cx| Table::new(delegate, window, cx));
 
         cx.subscribe_in(&table, window, Self::on_table_event)
